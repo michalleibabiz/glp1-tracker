@@ -169,6 +169,28 @@ input, select, textarea {
   gap: 10px;
 }
 
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.grid-3 input {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 8px;
+  background: #fbfdfe;
+  color: var(--ink);
+  width: 100%;
+  text-align: center;
+}
+
+.grid-3 input:focus {
+  outline: none;
+  border-color: var(--teal);
+  background: #fff;
+}
+
 .field {
   display: flex;
   flex-direction: column;

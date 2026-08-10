@@ -8,7 +8,7 @@ const STORAGE_KEY = "glp1_tracker_v1";
 
 const DEFAULT_DATA = {
   injections: [],   // { id, date, time, dose, site }
-  weights: [],       // { id, date, weight }
+  weights: [],       // { id, date, weight, waist, hips, chest }
   sideEffects: [],   // { id, date, symptom, severity, note }
   nutrition: [],     // { id, date, water, protein, note }
   notes: [],         // { id, date, text }
@@ -590,62 +590,112 @@ function InjectionsTab({ data, updateData, showToast }) {
 /* Weight                                                                   */
 /* ---------------------------------------------------------------------- */
 
+const MEASUREMENT_FIELDS = [
+  { key: "weight", label: "משקל", unit: "ק\"ג", step: "0.1" },
+  { key: "waist", label: "בטן", unit: "ס\"מ", step: "0.5" },
+  { key: "hips", label: "ישבן", unit: "ס\"מ", step: "0.5" },
+  { key: "chest", label: "חזה", unit: "ס\"מ", step: "0.5" },
+];
+
 function WeightTab({ data, updateData, showToast }) {
   const [date, setDate] = useState(todayISO());
   const [weight, setWeight] = useState("");
+  const [waist, setWaist] = useState("");
+  const [hips, setHips] = useState("");
+  const [chest, setChest] = useState("");
+  const [metric, setMetric] = useState("weight");
 
   const sorted = [...data.weights].sort((a, b) => a.date.localeCompare(b.date));
   const sortedDesc = [...sorted].reverse();
 
   function handleAdd() {
     if (!weight) { showToast("נא להזין משקל"); return; }
-    const entry = { id: uid(), date, weight: parseFloat(weight) };
+    const existing = data.weights.find((w) => w.date === date);
+    const entry = {
+      id: existing ? existing.id : uid(),
+      date,
+      weight: parseFloat(weight),
+      waist: waist === "" ? null : parseFloat(waist),
+      hips: hips === "" ? null : parseFloat(hips),
+      chest: chest === "" ? null : parseFloat(chest),
+    };
     updateData((d) => ({ ...d, weights: [...d.weights.filter((w) => w.date !== date), entry] }));
     setWeight("");
-    showToast("המשקל נשמר");
+    setWaist("");
+    setHips("");
+    setChest("");
+    showToast("המדידה נשמרה");
   }
 
   function handleDelete(id) {
     updateData((d) => ({ ...d, weights: d.weights.filter((w) => w.id !== id) }));
   }
 
+  const chartField = MEASUREMENT_FIELDS.find((f) => f.key === metric);
+  const chartPoints = sorted
+    .filter((w) => w[metric] !== null && w[metric] !== undefined && w[metric] !== "")
+    .map((w) => ({ y: w[metric], label: formatDateShortHe(w.date) }));
+
   return (
     <div className="screen">
       <div className="card">
-        <h2>רישום משקל</h2>
-        <div className="grid-2">
-          <div className="field">
-            <label>תאריך</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>משקל (ק"ג)</label>
-            <input type="number" inputMode="decimal" step="0.1" placeholder="לדוגמה 78.5" value={weight} onChange={(e) => setWeight(e.target.value)} />
+        <h2>רישום משקל והיקפים</h2>
+        <div className="field">
+          <label>תאריך</label>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>משקל (ק"ג)</label>
+          <input type="number" inputMode="decimal" step="0.1" placeholder="לדוגמה 78.5" value={weight} onChange={(e) => setWeight(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>היקפים (ס"מ) — לא חובה</label>
+          <div className="grid-3">
+            <input type="number" inputMode="decimal" step="0.5" placeholder="בטן" value={waist} onChange={(e) => setWaist(e.target.value)} />
+            <input type="number" inputMode="decimal" step="0.5" placeholder="ישבן" value={hips} onChange={(e) => setHips(e.target.value)} />
+            <input type="number" inputMode="decimal" step="0.5" placeholder="חזה" value={chest} onChange={(e) => setChest(e.target.value)} />
           </div>
         </div>
-        <button className="btn-primary" onClick={handleAdd}>שמירת משקל</button>
+        <button className="btn-primary" onClick={handleAdd}>שמירת מדידה</button>
       </div>
 
       <div className="card">
         <h2>גרף התקדמות</h2>
-        <LineChart points={sorted.map((w) => ({ y: w.weight, label: formatDateShortHe(w.date) }))} />
+        <div className="chip-row" style={{ marginBottom: 12 }}>
+          {MEASUREMENT_FIELDS.map((f) => (
+            <button
+              key={f.key}
+              className={`chip ${metric === f.key ? "selected" : ""}`}
+              onClick={() => setMetric(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <LineChart points={chartPoints} />
       </div>
 
       <div className="section-title">היסטוריה ({sortedDesc.length})</div>
       {sortedDesc.length === 0 ? (
-        <div className="card"><EmptyState text="עדיין אין מדידות משקל" /></div>
+        <div className="card"><EmptyState text="עדיין אין מדידות" /></div>
       ) : (
         <div className="card">
           <div className="entry-list">
-            {sortedDesc.map((w) => (
-              <div className="entry" key={w.id}>
-                <div className="meta">
-                  <span className="main">{w.weight} ק"ג</span>
-                  <span className="sub">{formatDateHe(w.date)}</span>
+            {sortedDesc.map((w) => {
+              const parts = [`${w.weight} ק"ג`];
+              if (w.waist) parts.push(`בטן ${w.waist}`);
+              if (w.hips) parts.push(`ישבן ${w.hips}`);
+              if (w.chest) parts.push(`חזה ${w.chest}`);
+              return (
+                <div className="entry" key={w.id}>
+                  <div className="meta">
+                    <span className="main">{parts.join(" · ")}</span>
+                    <span className="sub">{formatDateHe(w.date)}</span>
+                  </div>
+                  <ConfirmDelete onConfirm={() => handleDelete(w.id)}>✕</ConfirmDelete>
                 </div>
-                <ConfirmDelete onConfirm={() => handleDelete(w.id)}>✕</ConfirmDelete>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
