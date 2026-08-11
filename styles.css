@@ -119,7 +119,7 @@ input, select, textarea {
   position: relative;
 }
 
-.tab-btn .ic { font-size: 1.1rem; line-height: 1; filter: grayscale(1) opacity(0.55); }
+.tab-btn .ic { font-size: 1.25rem; line-height: 1; filter: grayscale(0.35) opacity(0.9); }
 
 .tab-btn.active {
   color: var(--navy);
