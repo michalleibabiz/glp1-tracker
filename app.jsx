@@ -10,7 +10,7 @@ const DEFAULT_DATA = {
   injections: [],   // { id, date, time, dose, site }
   weights: [],       // { id, date, weight, waist, hips, chest }
   sideEffects: [],   // { id, date, symptom, severity, note }
-  nutrition: [],     // { id, date, water, protein, note }
+  nutrition: [],     // { id, date, water, protein, breakfast, lunch, dinner, snacks, note }
   notes: [],         // { id, date, text }
   photos: [],        // { id, date (YYYY-MM), note } — actual image lives in IndexedDB, keyed by id
   settings: { intervalDays: 7, reminderEnabled: false },
@@ -1021,37 +1021,68 @@ function SideEffectsTab({ data, updateData, showToast }) {
 /* Nutrition                                                               */
 /* ---------------------------------------------------------------------- */
 
+const MEAL_SLOTS = [
+  { key: "breakfast", label: "בוקר", icon: "🌅" },
+  { key: "lunch", label: "צהריים", icon: "☀️" },
+  { key: "dinner", label: "ערב", icon: "🌙" },
+  { key: "snacks", label: "נשנושים", icon: "🍎" },
+];
+
+function emptyNutritionForm() {
+  return { water: "", protein: "", breakfast: "", lunch: "", dinner: "", snacks: "", note: "" };
+}
+
 function NutritionTab({ data, updateData, showToast }) {
   const [date, setDate] = useState(todayISO());
+  const [form, setForm] = useState(() => {
+    const e = data.nutrition.find((n) => n.date === todayISO());
+    return e ? { water: e.water ?? "", protein: e.protein ?? "", breakfast: e.breakfast ?? "", lunch: e.lunch ?? "", dinner: e.dinner ?? "", snacks: e.snacks ?? "", note: e.note ?? "" } : emptyNutritionForm();
+  });
+  const formTopRef = useRef(null);
+
   const existing = data.nutrition.find((n) => n.date === date);
-  const [water, setWater] = useState(existing ? existing.water : "");
-  const [protein, setProtein] = useState(existing ? existing.protein : "");
-  const [note, setNote] = useState(existing ? existing.note : "");
 
   useEffect(() => {
     const e = data.nutrition.find((n) => n.date === date);
-    setWater(e ? e.water : "");
-    setProtein(e ? e.protein : "");
-    setNote(e ? e.note : "");
+    setForm(e ? { water: e.water ?? "", protein: e.protein ?? "", breakfast: e.breakfast ?? "", lunch: e.lunch ?? "", dinner: e.dinner ?? "", snacks: e.snacks ?? "", note: e.note ?? "" } : emptyNutritionForm());
     // eslint-disable-next-line
   }, [date]);
 
   const sorted = [...data.nutrition].sort((a, b) => b.date.localeCompare(a.date));
 
+  function setField(key, value) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
   function handleSave() {
-    const entry = { id: existing ? existing.id : uid(), date, water: water === "" ? null : parseFloat(water), protein: protein === "" ? null : parseFloat(protein), note: note.trim() };
+    const entry = {
+      id: existing ? existing.id : uid(),
+      date,
+      water: form.water === "" ? null : parseFloat(form.water),
+      protein: form.protein === "" ? null : parseFloat(form.protein),
+      breakfast: form.breakfast.trim(),
+      lunch: form.lunch.trim(),
+      dinner: form.dinner.trim(),
+      snacks: form.snacks.trim(),
+      note: form.note.trim(),
+    };
     updateData((d) => ({ ...d, nutrition: [...d.nutrition.filter((n) => n.date !== date), entry] }));
-    showToast("הרישום היומי נשמר");
+    showToast(existing ? "היום עודכן" : "הרישום היומי נשמר");
   }
 
   function handleDelete(id) {
     updateData((d) => ({ ...d, nutrition: d.nutrition.filter((n) => n.id !== id) }));
   }
 
+  function handleEdit(entry) {
+    setDate(entry.date);
+    if (formTopRef.current) formTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <div className="screen">
-      <div className="card">
-        <h2>יומן תזונה יומי</h2>
+      <div className="card" ref={formTopRef}>
+        <h2>תפריט יומי {existing ? <span className="muted">— עריכת יום קיים</span> : null}</h2>
         <div className="field">
           <label>תאריך</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -1059,18 +1090,33 @@ function NutritionTab({ data, updateData, showToast }) {
         <div className="grid-2">
           <div className="field">
             <label>שתייה (כוסות)</label>
-            <input type="number" inputMode="numeric" value={water} onChange={(e) => setWater(e.target.value)} placeholder="0" />
+            <input type="number" inputMode="numeric" value={form.water} onChange={(e) => setField("water", e.target.value)} placeholder="0" />
           </div>
           <div className="field">
             <label>חלבון (גרם)</label>
-            <input type="number" inputMode="numeric" value={protein} onChange={(e) => setProtein(e.target.value)} placeholder="0" />
+            <input type="number" inputMode="numeric" value={form.protein} onChange={(e) => setField("protein", e.target.value)} placeholder="0" />
           </div>
         </div>
+
+        {MEAL_SLOTS.map((slot) => (
+          <div className="field" key={slot.key}>
+            <label>{slot.icon} {slot.label}</label>
+            <textarea
+              className="meal-input"
+              value={form[slot.key]}
+              onChange={(e) => setField(slot.key, e.target.value)}
+              placeholder={`מה אכלת ב${slot.label}...`}
+            />
+          </div>
+        ))}
+
         <div className="field">
-          <label>ארוחות / הערות</label>
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="מה אכלת היום..." />
+          <label>הערות נוספות (לא חובה)</label>
+          <textarea value={form.note} onChange={(e) => setField("note", e.target.value)} placeholder="תחושות, תיאבון, כל דבר נוסף..." />
         </div>
-        <button className="btn-primary" onClick={handleSave}>שמירת יום {formatDateHe(date)}</button>
+        <button className="btn-primary" onClick={handleSave}>
+          {existing ? "עדכון" : "שמירת"} יום {formatDateHe(date)}
+        </button>
       </div>
 
       <div className="section-title">היסטוריה ({sorted.length})</div>
@@ -1080,15 +1126,32 @@ function NutritionTab({ data, updateData, showToast }) {
         <div className="card">
           <div className="entry-list">
             {sorted.map((n) => (
-              <div className="entry" key={n.id}>
-                <div className="meta">
-                  <span className="main">
-                    {n.water !== null && n.water !== undefined ? `💧${n.water} ` : ""}
-                    {n.protein !== null && n.protein !== undefined ? `🥩${n.protein}ג' ` : ""}
-                  </span>
-                  <span className="sub">{formatDateHe(n.date)}{n.note ? ` — ${n.note}` : ""}</span>
+              <div className="nutrition-entry" key={n.id}>
+                <div className="nutrition-entry-header">
+                  <span className="date">{formatDateHe(n.date)}</span>
+                  <div className="nutrition-entry-actions">
+                    <button className="edit-btn" onClick={() => handleEdit(n)}>עריכה</button>
+                    <ConfirmDelete onConfirm={() => handleDelete(n.id)}>✕</ConfirmDelete>
+                  </div>
                 </div>
-                <ConfirmDelete onConfirm={() => handleDelete(n.id)}>✕</ConfirmDelete>
+                {(n.water || n.protein) && (
+                  <div className="nutrition-badges">
+                    {n.water ? <span className="badge">💧 {n.water} כוסות</span> : null}
+                    {n.protein ? <span className="badge">🥩 {n.protein} גרם</span> : null}
+                  </div>
+                )}
+                {MEAL_SLOTS.some((s) => n[s.key]) && (
+                  <div className="meal-rows">
+                    {MEAL_SLOTS.map((s) => n[s.key] ? (
+                      <div className="meal-row" key={s.key}>
+                        <span className="meal-icon">{s.icon}</span>
+                        <span className="meal-label">{s.label}:</span>
+                        <span className="meal-text">{n[s.key]}</span>
+                      </div>
+                    ) : null)}
+                  </div>
+                )}
+                {n.note && <div className="nutrition-note">{n.note}</div>}
               </div>
             ))}
           </div>

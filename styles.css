@@ -214,6 +214,7 @@ input, select, textarea {
 }
 
 .field textarea { resize: vertical; min-height: 60px; }
+.field textarea.meal-input { min-height: 42px; }
 
 .field input:focus, .field select:focus, .field textarea:focus {
   outline: none;
@@ -670,6 +671,85 @@ input, select, textarea {
   color: #fff;
   font-size: 0.85rem;
   opacity: 0.85;
+}
+
+/* Nutrition history entries */
+.nutrition-entry {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fbfdfe;
+}
+
+.nutrition-entry + .nutrition-entry { margin-top: 8px; }
+
+.nutrition-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.nutrition-entry-header .date {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+
+.nutrition-entry-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.edit-btn {
+  background: transparent;
+  border: none;
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 6px;
+}
+
+.nutrition-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.nutrition-badges .badge {
+  font-size: 0.74rem;
+  color: var(--navy-deep);
+  background: var(--cyan-light);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.meal-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.meal-row {
+  font-size: 0.82rem;
+  color: var(--ink);
+  display: flex;
+  gap: 5px;
+  align-items: baseline;
+}
+
+.meal-row .meal-icon { flex-shrink: 0; }
+.meal-row .meal-label { font-weight: 600; color: var(--ink-soft); flex-shrink: 0; }
+.meal-row .meal-text { color: var(--ink); }
+
+.nutrition-note {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--ink-soft);
 }
 
 .lightbox-close {
