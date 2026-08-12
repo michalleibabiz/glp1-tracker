@@ -1089,8 +1089,8 @@ function NutritionTab({ data, updateData, showToast }) {
         </div>
         <div className="grid-2">
           <div className="field">
-            <label>שתייה (כוסות)</label>
-            <input type="number" inputMode="numeric" value={form.water} onChange={(e) => setField("water", e.target.value)} placeholder="0" />
+            <label>שתייה (ליטר)</label>
+            <input type="number" inputMode="decimal" step="0.1" value={form.water} onChange={(e) => setField("water", e.target.value)} placeholder="0" />
           </div>
           <div className="field">
             <label>חלבון (גרם)</label>
@@ -1136,7 +1136,7 @@ function NutritionTab({ data, updateData, showToast }) {
                 </div>
                 {(n.water || n.protein) && (
                   <div className="nutrition-badges">
-                    {n.water ? <span className="badge">💧 {n.water} כוסות</span> : null}
+                    {n.water ? <span className="badge">💧 {n.water} ליטר</span> : null}
                     {n.protein ? <span className="badge">🥩 {n.protein} גרם</span> : null}
                   </div>
                 )}
