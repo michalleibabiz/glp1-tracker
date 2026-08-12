@@ -419,26 +419,27 @@ input, select, textarea {
 /* Quote banner */
 .quote-banner {
   display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  background: linear-gradient(135deg, var(--cyan-light), #eef8fb);
-  border: 1px solid #cfe9f2;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(150deg, var(--navy), var(--teal) 85%);
   border-radius: var(--radius);
-  padding: 15px 17px;
+  padding: 26px 22px;
   margin: 8px 0 14px;
   font-family: "Fraunces", serif;
-  font-size: 0.92rem;
+  font-size: 1.25rem;
+  font-weight: 500;
   font-style: italic;
-  color: var(--navy-deep);
-  line-height: 1.55;
+  color: #ffffff;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .quote-mark {
-  font-size: 1.1rem;
-  line-height: 1.4;
+  font-size: 1.8rem;
+  line-height: 1;
   font-style: normal;
-  color: var(--teal);
-  flex-shrink: 0;
+  color: var(--cyan);
+  align-self: center;
 }
 
 /* Toast */
