@@ -822,7 +822,7 @@ function PhotosTab({ data, updateData, showToast }) {
         </div>
         <div className="field">
           <label>תמונה</label>
-          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} />
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} />
         </div>
         {previewUrl && (
           <div className="field">
