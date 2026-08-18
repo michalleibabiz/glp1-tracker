@@ -1534,13 +1534,15 @@ function App() {
     <React.Fragment>
       <header className="app-header">
         <div className="header-inner">
-          <h1>המעקב של מיכל לייבה</h1>
-          <p className="subtitle">יומן GLP-1 אישי — הנתונים שלך נשארים איתך בלבד</p>
+          <h1>מעקב GLP-1</h1>
+          <p className="subtitle">יומן אישי — הנתונים שלך נשארים איתך בלבד</p>
         </div>
         <WaveDivider />
       </header>
 
       {screens[tab]}
+
+      <div className="app-footer">פותח ועוצב על ידי מיכל לייבה</div>
 
       <nav className="tab-bar">
         {TABS.map((t) => (
