@@ -476,21 +476,22 @@ input, select, textarea {
 
 /* Dashboard greeting */
 .greeting-block {
-  padding: 6px 4px 2px;
+  padding: 10px 4px 4px;
 }
 
 .greeting-text {
   font-family: "Fraunces", serif;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.85rem;
+  font-weight: 700;
   color: var(--navy);
   margin: 0;
+  line-height: 1.2;
 }
 
 .greeting-sub {
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   color: var(--ink-soft);
-  margin: 4px 0 0;
+  margin: 6px 0 0;
 }
 
 /* Progress card */
