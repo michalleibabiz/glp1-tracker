@@ -7,11 +7,12 @@ const { useState, useEffect, useMemo, useRef, useCallback, useId } = React;
 const STORAGE_KEY = "glp1_tracker_v1";
 
 const DEFAULT_DATA = {
-  injections: [],   // { id, date, time, dose, site }
-  weights: [],       // { id, date, weight, waist, hips, chest }
+  injections: [],   // { id, date, time, dose, site, note }
+  weights: [],       // { id, date, weight, waist, hips, chest, note }
   sideEffects: [],   // { id, date, symptom, severity, note }
   nutrition: [],     // { id, date, water, protein, breakfast, lunch, dinner, snacks, note }
-  notes: [],         // { id, date, text }
+  workouts: [],      // { id, date, type, duration, note }
+  notes: [],         // legacy — kept only so old exported JSON still imports cleanly
   photos: [],        // { id, date (YYYY-MM), note } — actual image lives in IndexedDB, keyed by id
   settings: { intervalDays: 7, reminderEnabled: false },
 };
@@ -232,7 +233,7 @@ const TABS = [
   { key: "photos", label: "תמונות", icon: "📷" },
   { key: "sideEffects", label: "תופעות", icon: "📋" },
   { key: "nutrition", label: "תזונה", icon: "🥤" },
-  { key: "notes", label: "הערות", icon: "📝" },
+  { key: "workouts", label: "אימונים", icon: "🏋️" },
   { key: "settings", label: "הגדרות", icon: "⚙️" },
 ];
 
@@ -512,6 +513,7 @@ function InjectionsTab({ data, updateData, showToast }) {
   const [time, setTime] = useState(nowHM());
   const [dose, setDose] = useState("");
   const [site, setSite] = useState(rec);
+  const [note, setNote] = useState("");
 
   useEffect(() => { setSite(rec); }, [rec]);
 
@@ -519,9 +521,10 @@ function InjectionsTab({ data, updateData, showToast }) {
 
   function handleAdd() {
     if (!date || !dose) { showToast("נא למלא תאריך ומינון"); return; }
-    const entry = { id: uid(), date, time, dose: parseFloat(dose), site };
+    const entry = { id: uid(), date, time, dose: parseFloat(dose), site, note: note.trim() };
     updateData((d) => ({ ...d, injections: [...d.injections, entry] }));
     setDose("");
+    setNote("");
     showToast("הזריקה נשמרה");
   }
 
@@ -561,6 +564,10 @@ function InjectionsTab({ data, updateData, showToast }) {
             ))}
           </div>
         </div>
+        <div className="field">
+          <label>הערה (לא חובה)</label>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="תחושות, תגובה לזריקה..." />
+        </div>
         <button className="btn-primary" onClick={handleAdd}>שמירת זריקה</button>
       </div>
 
@@ -574,7 +581,7 @@ function InjectionsTab({ data, updateData, showToast }) {
               <div className="entry" key={i.id}>
                 <div className="meta">
                   <span className="main">{i.dose} מ"ג · {i.site}</span>
-                  <span className="sub">{formatDateHe(i.date)} · {i.time}</span>
+                  <span className="sub">{formatDateHe(i.date)} · {i.time}{i.note ? ` — ${i.note}` : ""}</span>
                 </div>
                 <ConfirmDelete onConfirm={() => handleDelete(i.id)}>✕</ConfirmDelete>
               </div>
@@ -603,6 +610,7 @@ function WeightTab({ data, updateData, showToast }) {
   const [waist, setWaist] = useState("");
   const [hips, setHips] = useState("");
   const [chest, setChest] = useState("");
+  const [note, setNote] = useState("");
   const [metric, setMetric] = useState("weight");
 
   const sorted = [...data.weights].sort((a, b) => a.date.localeCompare(b.date));
@@ -618,12 +626,14 @@ function WeightTab({ data, updateData, showToast }) {
       waist: waist === "" ? null : parseFloat(waist),
       hips: hips === "" ? null : parseFloat(hips),
       chest: chest === "" ? null : parseFloat(chest),
+      note: note.trim(),
     };
     updateData((d) => ({ ...d, weights: [...d.weights.filter((w) => w.date !== date), entry] }));
     setWeight("");
     setWaist("");
     setHips("");
     setChest("");
+    setNote("");
     showToast("המדידה נשמרה");
   }
 
@@ -655,6 +665,10 @@ function WeightTab({ data, updateData, showToast }) {
             <input type="number" inputMode="decimal" step="0.5" placeholder="ישבן" value={hips} onChange={(e) => setHips(e.target.value)} />
             <input type="number" inputMode="decimal" step="0.5" placeholder="חזה" value={chest} onChange={(e) => setChest(e.target.value)} />
           </div>
+        </div>
+        <div className="field">
+          <label>הערה (לא חובה)</label>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="תחושות, הקשר למדידה..." />
         </div>
         <button className="btn-primary" onClick={handleAdd}>שמירת מדידה</button>
       </div>
@@ -690,7 +704,7 @@ function WeightTab({ data, updateData, showToast }) {
                 <div className="entry" key={w.id}>
                   <div className="meta">
                     <span className="main">{parts.join(" · ")}</span>
-                    <span className="sub">{formatDateHe(w.date)}</span>
+                    <span className="sub">{formatDateHe(w.date)}{w.note ? ` — ${w.note}` : ""}</span>
                   </div>
                   <ConfirmDelete onConfirm={() => handleDelete(w.id)}>✕</ConfirmDelete>
                 </div>
@@ -1162,48 +1176,104 @@ function NutritionTab({ data, updateData, showToast }) {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Notes                                                                    */
+/* Workouts                                                                 */
 /* ---------------------------------------------------------------------- */
 
-function NotesTab({ data, updateData, showToast }) {
-  const [text, setText] = useState("");
-  const sorted = [...data.notes].sort((a, b) => b.date.localeCompare(a.date));
+const WORKOUT_TYPES = ["הליכה", "ריצה", "אימון כוח", "יוגה / פילאטיס", "שחייה", "אופניים", "אחר"];
+
+function WorkoutsTab({ data, updateData, showToast }) {
+  const [date, setDate] = useState(todayISO());
+  const [type, setType] = useState(WORKOUT_TYPES[0]);
+  const [customType, setCustomType] = useState("");
+  const [duration, setDuration] = useState("");
+  const [note, setNote] = useState("");
+
+  const sorted = [...data.workouts].sort((a, b) => b.date.localeCompare(a.date));
+
+  const totalMinutesThisWeek = useMemo(() => {
+    const weekAgo = addDaysISO(todayISO(), -6);
+    return data.workouts
+      .filter((w) => w.date >= weekAgo && w.date <= todayISO())
+      .reduce((sum, w) => sum + (w.duration || 0), 0);
+  }, [data.workouts]);
 
   function handleAdd() {
-    if (!text.trim()) { showToast("נא לכתוב הערה"); return; }
-    const entry = { id: uid(), date: new Date().toISOString(), text: text.trim() };
-    updateData((d) => ({ ...d, notes: [...d.notes, entry] }));
-    setText("");
-    showToast("ההערה נשמרה");
+    const finalType = type === "אחר" ? customType.trim() : type;
+    if (!finalType) { showToast("נא לבחור או להזין סוג אימון"); return; }
+    if (!duration) { showToast("נא להזין משך זמן"); return; }
+    const entry = { id: uid(), date, type: finalType, duration: parseFloat(duration), note: note.trim() };
+    updateData((d) => ({ ...d, workouts: [...d.workouts, entry] }));
+    setDuration("");
+    setCustomType("");
+    setNote("");
+    showToast("האימון נשמר");
   }
 
   function handleDelete(id) {
-    updateData((d) => ({ ...d, notes: d.notes.filter((n) => n.id !== id) }));
+    updateData((d) => ({ ...d, workouts: d.workouts.filter((w) => w.id !== id) }));
   }
 
   return (
     <div className="screen">
-      <div className="card">
-        <h2>הערה חופשית</h2>
-        <div className="field">
-          <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="איך את מרגישה היום?" rows={4} />
+      <div className="stat-row">
+        <div className="stat-card">
+          <div className="value">{totalMinutesThisWeek}</div>
+          <div className="label">דקות אימון (7 ימים)</div>
         </div>
-        <button className="btn-primary" onClick={handleAdd}>שמירת הערה</button>
+        <div className="stat-card">
+          <div className="value">{data.workouts.length}</div>
+          <div className="label">סה"כ אימונים</div>
+        </div>
       </div>
 
-      <div className="section-title">הערות קודמות ({sorted.length})</div>
+      <div className="card">
+        <h2>רישום אימון</h2>
+        <div className="field">
+          <label>תאריך</label>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>סוג אימון</label>
+          <div className="chip-row">
+            {WORKOUT_TYPES.map((t) => (
+              <button key={t} className={`chip ${type === t ? "selected" : ""}`} onClick={() => setType(t)}>
+                {t}
+              </button>
+            ))}
+          </div>
+          {type === "אחר" && (
+            <input
+              style={{ marginTop: 8, border: "1px solid #dbe7ee", borderRadius: 10, padding: "10px 11px", width: "100%" }}
+              placeholder="תיאור סוג האימון"
+              value={customType}
+              onChange={(e) => setCustomType(e.target.value)}
+            />
+          )}
+        </div>
+        <div className="field">
+          <label>משך זמן (דקות)</label>
+          <input type="number" inputMode="numeric" placeholder="לדוגמה 30" value={duration} onChange={(e) => setDuration(e.target.value)} />
+        </div>
+        <div className="field">
+          <label>הערה (לא חובה)</label>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="איך הרגשת, עצימות, פרטים נוספים..." />
+        </div>
+        <button className="btn-primary" onClick={handleAdd}>שמירת אימון</button>
+      </div>
+
+      <div className="section-title">היסטוריה ({sorted.length})</div>
       {sorted.length === 0 ? (
-        <div className="card"><EmptyState text="עדיין אין הערות" /></div>
+        <div className="card"><EmptyState text="עדיין לא נרשמו אימונים" /></div>
       ) : (
         <div className="card">
           <div className="entry-list">
-            {sorted.map((n) => (
-              <div className="entry" key={n.id} style={{ alignItems: "flex-start" }}>
+            {sorted.map((w) => (
+              <div className="entry" key={w.id}>
                 <div className="meta">
-                  <span className="main">{n.text}</span>
-                  <span className="sub">{new Date(n.date).toLocaleString("he-IL")}</span>
+                  <span className="main">{w.type} · {w.duration} דק'</span>
+                  <span className="sub">{formatDateHe(w.date)}{w.note ? ` — ${w.note}` : ""}</span>
                 </div>
-                <ConfirmDelete onConfirm={() => handleDelete(n.id)}>✕</ConfirmDelete>
+                <ConfirmDelete onConfirm={() => handleDelete(w.id)}>✕</ConfirmDelete>
               </div>
             ))}
           </div>
@@ -1385,7 +1455,7 @@ function App() {
     photos: <PhotosTab data={data} updateData={updateData} showToast={showToast} />,
     sideEffects: <SideEffectsTab data={data} updateData={updateData} showToast={showToast} />,
     nutrition: <NutritionTab data={data} updateData={updateData} showToast={showToast} />,
-    notes: <NotesTab data={data} updateData={updateData} showToast={showToast} />,
+    workouts: <WorkoutsTab data={data} updateData={updateData} showToast={showToast} />,
     settings: <SettingsTab data={data} updateData={updateData} showToast={showToast} />,
   };
 
@@ -1415,5 +1485,9 @@ function App() {
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
+window.mountGlp1App = function mountGlp1App() {
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(<App />);
+};
+
+if (window.__glp1Unlocked) window.mountGlp1App();
