@@ -472,7 +472,7 @@ function Dashboard({ data, showToast, onNavigate }) {
 
   const greeting = getGreeting();
   const daysSinceLastInjection = lastInjection ? daysBetween(lastInjection.date, today) : null;
-  let dayCounterText = null;
+  let dayCounterText = "בואי נתחיל לתעד את המסע שלך";
   if (daysSinceLastInjection === 0) {
     dayCounterText = "היום הזרקת! 💉";
   } else if (daysSinceLastInjection !== null) {
@@ -485,7 +485,7 @@ function Dashboard({ data, showToast, onNavigate }) {
     <div className="screen">
       <div className="greeting-block">
         <h2 className="greeting-text">{greeting.text}, {USER_NAME} {greeting.icon}</h2>
-        {dayCounterText && <p className="greeting-sub">{dayCounterText}</p>}
+        <p className="greeting-sub">{dayCounterText}</p>
       </div>
 
       <QuoteBanner />
