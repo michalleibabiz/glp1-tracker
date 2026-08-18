@@ -197,6 +197,21 @@ function formatMonthHe(ym) {
   return d.toLocaleDateString("he-IL", { month: "long", year: "numeric" });
 }
 
+/* Native <input type="month"> renders its label in the browser/OS UI
+   language, ignoring the page's lang="he" — so month pickers use these
+   plain <select> dropdowns instead, guaranteeing Hebrew regardless of
+   device settings. */
+const HEBREW_MONTHS = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+
+function splitYearMonth(ym) {
+  const [year, month] = ym.split("-").map(Number);
+  return { year, monthIndex: month - 1 };
+}
+
+function joinYearMonth(year, monthIndex) {
+  return `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
+}
+
 /* ---------------------------------------------------------------------- */
 /* Constants                                                               */
 /* ---------------------------------------------------------------------- */
@@ -923,11 +938,31 @@ function PhotosTab({ data, updateData, showToast }) {
         <h2>העלאת תמונה חודשית</h2>
         <div className="field">
           <label>חודש</label>
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          <div className="grid-2">
+            <select
+              value={splitYearMonth(month).monthIndex}
+              onChange={(e) => setMonth(joinYearMonth(splitYearMonth(month).year, parseInt(e.target.value, 10)))}
+            >
+              {HEBREW_MONTHS.map((name, idx) => (
+                <option key={idx} value={idx}>{name}</option>
+              ))}
+            </select>
+            <select
+              value={splitYearMonth(month).year}
+              onChange={(e) => setMonth(joinYearMonth(parseInt(e.target.value, 10), splitYearMonth(month).monthIndex))}
+            >
+              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 3 + i).map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="field">
           <label>תמונה</label>
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} />
+          <button type="button" className="btn-secondary" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
+            {selectedFile ? selectedFile.name : "בחירת תמונה"}
+          </button>
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: "none" }} />
         </div>
         {previewUrl && (
           <div className="field">
