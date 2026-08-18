@@ -1556,9 +1556,5 @@ function App() {
   );
 }
 
-window.mountGlp1App = function mountGlp1App() {
-  const root = ReactDOM.createRoot(document.getElementById("root"));
-  root.render(<App />);
-};
-
-if (window.__glp1Unlocked) window.mountGlp1App();
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
