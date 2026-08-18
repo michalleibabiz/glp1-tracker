@@ -164,7 +164,7 @@ function nowHM() {
 function formatDateHe(iso) {
   if (!iso) return "";
   const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("he-IL", { day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" });
 }
 
 function formatDateShortHe(iso) {
