@@ -14,7 +14,7 @@ const DEFAULT_DATA = {
   workouts: [],      // { id, date, type, duration, note }
   notes: [],         // legacy — kept only so old exported JSON still imports cleanly
   photos: [],        // { id, date (YYYY-MM), note } — actual image lives in IndexedDB, keyed by id
-  settings: { intervalDays: 7, reminderEnabled: false },
+  settings: { intervalDays: 7, reminderEnabled: false, medication: "", treatmentStartDate: "" },
 };
 
 function loadData() {
@@ -142,9 +142,18 @@ function resizeImageFile(file, maxDim = 1600, quality = 0.85) {
 /* Date helpers                                                            */
 /* ---------------------------------------------------------------------- */
 
+/* Formats a Date using its LOCAL calendar fields — never use toISOString()
+   for this, since it converts to UTC first and silently rolls the date
+   back by one day for any timezone ahead of UTC (e.g. Israel). */
+function toLocalISO(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function todayISO() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
+  return toLocalISO(new Date());
 }
 
 function nowHM() {
@@ -173,7 +182,7 @@ function daysBetween(isoA, isoB) {
 function addDaysISO(iso, days) {
   const d = new Date(iso + "T00:00:00");
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return toLocalISO(d);
 }
 
 function currentYearMonth() {
@@ -221,6 +230,8 @@ function getDailyQuote() {
 }
 
 const NONE_SYMPTOM = "אין";
+
+const MEDICATION_OPTIONS = ["מונג'רו", "וויגובי", "אוזמפיק", "סקסנדה"];
 
 const COMMON_SYMPTOMS = ["בחילה", "עייפות", "כאב ראש", "עצירות", "שלשול", "צרבת", "סחרחורת", "כאב בטן", "ירידה בתיאבון"];
 
@@ -375,35 +386,40 @@ function Dashboard({ data, showToast, onNavigate }) {
   const lastInjection = data.injections[data.injections.length - 1];
   const intervalDays = data.settings.intervalDays;
   const today = todayISO();
+  const medLabel = data.settings.medication ? ` (${data.settings.medication})` : "";
+
+  const anchorDate = lastInjection ? lastInjection.date : (data.settings.treatmentStartDate || null);
+  const fromStartDateOnly = !lastInjection && !!data.settings.treatmentStartDate;
 
   let nextDueISO = null;
   let daysLeft = null;
-  if (lastInjection) {
-    nextDueISO = addDaysISO(lastInjection.date, intervalDays);
+  if (anchorDate) {
+    nextDueISO = addDaysISO(anchorDate, intervalDays);
     daysLeft = daysBetween(today, nextDueISO);
   }
 
   let bannerClass = "ok";
   let bannerBig = "אין עדיין זריקות רשומות";
-  let bannerSmall = "עברי ללשונית זריקות כדי להוסיף רישום ראשון";
+  let bannerSmall = "עברי ללשונית זריקות כדי להוסיף רישום ראשון, או הגדירי תאריך תחילת טיפול בהגדרות";
 
-  if (lastInjection) {
+  if (anchorDate) {
+    const dueNote = fromStartDateOnly ? " · לפי תאריך תחילת הטיפול" : "";
     if (daysLeft > 1) {
       bannerClass = "ok";
-      bannerBig = `הזריקה הבאה בעוד ${daysLeft} ימים`;
-      bannerSmall = `מתוכננת ל-${formatDateHe(nextDueISO)}`;
+      bannerBig = `הזריקה הבאה${medLabel} בעוד ${daysLeft} ימים`;
+      bannerSmall = `מתוכננת ל-${formatDateHe(nextDueISO)}${dueNote}`;
     } else if (daysLeft === 1) {
       bannerClass = "due";
-      bannerBig = "הזריקה הבאה מחר";
-      bannerSmall = `מתוכננת ל-${formatDateHe(nextDueISO)}`;
+      bannerBig = `הזריקה הבאה${medLabel} מחר`;
+      bannerSmall = `מתוכננת ל-${formatDateHe(nextDueISO)}${dueNote}`;
     } else if (daysLeft === 0) {
       bannerClass = "due";
-      bannerBig = "הזריקה הבאה היום";
-      bannerSmall = "אל תשכחי לתעד אחרי ההזרקה";
+      bannerBig = `הזריקה הבאה${medLabel} היום`;
+      bannerSmall = `אל תשכחי לתעד אחרי ההזרקה${dueNote}`;
     } else {
       bannerClass = "overdue";
-      bannerBig = `איחור של ${Math.abs(daysLeft)} ימים`;
-      bannerSmall = `היעד היה ${formatDateHe(nextDueISO)}`;
+      bannerBig = `איחור של ${Math.abs(daysLeft)} ימים${medLabel}`;
+      bannerSmall = `היעד היה ${formatDateHe(nextDueISO)}${dueNote}`;
     }
   }
 
@@ -535,7 +551,7 @@ function InjectionsTab({ data, updateData, showToast }) {
   return (
     <div className="screen">
       <div className="card">
-        <h2>רישום זריקה חדשה</h2>
+        <h2>רישום זריקה חדשה{data.settings.medication ? <span className="muted"> — {data.settings.medication}</span> : null}</h2>
         <div className="grid-2">
           <div className="field">
             <label>תאריך</label>
@@ -1292,9 +1308,32 @@ function SettingsTab({ data, updateData, showToast }) {
     typeof Notification !== "undefined" ? Notification.permission : "unsupported"
   );
 
+  const currentMed = data.settings.medication || "";
+  const [medChoice, setMedChoice] = useState(() => (MEDICATION_OPTIONS.includes(currentMed) ? currentMed : (currentMed ? "אחר" : "")));
+  const [medCustom, setMedCustom] = useState(() => (MEDICATION_OPTIONS.includes(currentMed) ? "" : currentMed));
+
+  function selectMedication(opt) {
+    setMedChoice(opt);
+    if (opt === "אחר") {
+      updateData((d) => ({ ...d, settings: { ...d.settings, medication: medCustom } }));
+    } else {
+      setMedCustom("");
+      updateData((d) => ({ ...d, settings: { ...d.settings, medication: opt } }));
+    }
+  }
+
+  function changeMedCustom(val) {
+    setMedCustom(val);
+    updateData((d) => ({ ...d, settings: { ...d.settings, medication: val } }));
+  }
+
   function handleIntervalChange(e) {
     const val = parseInt(e.target.value, 10) || 1;
     updateData((d) => ({ ...d, settings: { ...d.settings, intervalDays: val } }));
+  }
+
+  function handleStartDateChange(e) {
+    updateData((d) => ({ ...d, settings: { ...d.settings, treatmentStartDate: e.target.value } }));
   }
 
   async function toggleReminders() {
@@ -1356,6 +1395,38 @@ function SettingsTab({ data, updateData, showToast }) {
       <div className="privacy-note">
         <span>🔒</span>
         <span>כל הנתונים שלך נשמרים אך ורק על המכשיר הזה (localStorage). שום מידע לא נשלח לשרת חיצוני.</span>
+      </div>
+
+      <div className="card">
+        <h2>הטיפול שלך</h2>
+        <div className="field">
+          <label>שם התרופה</label>
+          <div className="chip-row">
+            {MEDICATION_OPTIONS.map((opt) => (
+              <button key={opt} className={`chip ${medChoice === opt ? "selected" : ""}`} onClick={() => selectMedication(opt)}>
+                {opt}
+              </button>
+            ))}
+            <button className={`chip ${medChoice === "אחר" ? "selected" : ""}`} onClick={() => selectMedication("אחר")}>
+              אחר
+            </button>
+          </div>
+          {medChoice === "אחר" && (
+            <input
+              style={{ marginTop: 8, border: "1px solid #dbe7ee", borderRadius: 10, padding: "10px 11px", width: "100%" }}
+              placeholder="שם התרופה"
+              value={medCustom}
+              onChange={(e) => changeMedCustom(e.target.value)}
+            />
+          )}
+        </div>
+        <div className="field">
+          <label>תאריך תחילת הטיפול</label>
+          <input type="date" value={data.settings.treatmentStartDate || ""} onChange={handleStartDateChange} />
+        </div>
+        <div className="empty-state" style={{ padding: "8px 0 0", textAlign: "right" }}>
+          תאריך ההתחלה משמש לחישוב הזריקה הבאה כל עוד לא נרשמה עדיין אף זריקה באפליקציה.
+        </div>
       </div>
 
       <div className="card">
