@@ -14,7 +14,7 @@ const DEFAULT_DATA = {
   workouts: [],      // { id, date, type, duration, note }
   notes: [],         // legacy — kept only so old exported JSON still imports cleanly
   photos: [],        // { id, date (YYYY-MM), note } — actual image lives in IndexedDB, keyed by id
-  settings: { intervalDays: 7, reminderEnabled: false, medication: "", treatmentStartDate: "" },
+  settings: { intervalDays: 7, reminderEnabled: false, medication: "", treatmentStartDate: "", goalWeight: "" },
 };
 
 function loadData() {
@@ -233,6 +233,19 @@ const NONE_SYMPTOM = "אין";
 
 const MEDICATION_OPTIONS = ["מונג'רו", "וויגובי", "אוזמפיק", "סקסנדה"];
 
+const USER_NAME = "מיכל";
+const WATER_GOAL_L = 2;
+const PROTEIN_GOAL_G = 100;
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 5) return { text: "לילה טוב", icon: "🌙" };
+  if (h < 12) return { text: "בוקר טוב", icon: "☀️" };
+  if (h < 17) return { text: "צהריים טובים", icon: "🌤️" };
+  if (h < 21) return { text: "ערב טוב", icon: "🌆" };
+  return { text: "לילה טוב", icon: "🌙" };
+}
+
 const COMMON_SYMPTOMS = ["בחילה", "עייפות", "כאב ראש", "עצירות", "שלשול", "צרבת", "סחרחורת", "כאב בטן", "ירידה בתיאבון"];
 
 const SEVERITY_COLORS = { 1: "#7fc7dc", 2: "#3fabc7", 3: "#1a9cb8", 4: "#16336e", 5: "#c0392b" };
@@ -430,12 +443,36 @@ function Dashboard({ data, showToast, onNavigate }) {
     ? (lastWeight.weight - firstWeightOverall.weight)
     : null;
 
+  const goalWeight = data.settings.goalWeight ? parseFloat(data.settings.goalWeight) : null;
+  let goalProgressPct = null;
+  if (goalWeight && firstWeightOverall && lastWeight && firstWeightOverall.weight > goalWeight) {
+    const totalToLose = firstWeightOverall.weight - goalWeight;
+    const lostSoFar = firstWeightOverall.weight - lastWeight.weight;
+    goalProgressPct = Math.max(0, Math.min(100, Math.round((lostSoFar / totalToLose) * 100)));
+  }
+
   const recentSideEffects = [...data.sideEffects].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
 
   const hasPhotoThisMonth = data.photos.some((p) => p.date === currentYearMonth());
 
+  const greeting = getGreeting();
+  const daysSinceLastInjection = lastInjection ? daysBetween(lastInjection.date, today) : null;
+  let dayCounterText = null;
+  if (daysSinceLastInjection === 0) {
+    dayCounterText = "היום הזרקת! 💉";
+  } else if (daysSinceLastInjection !== null) {
+    dayCounterText = `היום הוא היום ה-${daysSinceLastInjection + 1} מאז הזריקה האחרונה`;
+  }
+
+  const todayNutrition = data.nutrition.find((n) => n.date === today);
+
   return (
     <div className="screen">
+      <div className="greeting-block">
+        <h2 className="greeting-text">{greeting.text}, {USER_NAME} {greeting.icon}</h2>
+        {dayCounterText && <p className="greeting-sub">{dayCounterText}</p>}
+      </div>
+
       <QuoteBanner />
 
       {!hasPhotoThisMonth && (
@@ -456,16 +493,54 @@ function Dashboard({ data, showToast, onNavigate }) {
         <WaveDivider fill="var(--bg)" />
       </div>
 
-      <div className="stat-row">
-        <div className="stat-card">
-          <div className="value">{lastWeight ? lastWeight.weight : "—"}</div>
-          <div className="label">משקל אחרון (ק"ג)</div>
-        </div>
-        <div className="stat-card">
-          <div className="value">{weightDelta !== null ? (weightDelta > 0 ? "+" : "") + weightDelta.toFixed(1) : "—"}</div>
-          <div className="label">שינוי כולל (ק"ג)</div>
-        </div>
+      <div className="card">
+        <h2>ההתקדמות שלי</h2>
+        {!lastWeight ? (
+          <EmptyState text="עדיין אין מדידות משקל" />
+        ) : (
+          <React.Fragment>
+            <div className="progress-numbers">
+              {firstWeightOverall && firstWeightOverall.id !== lastWeight.id && (
+                <React.Fragment>
+                  <span className="progress-first">{firstWeightOverall.weight}</span>
+                  <span className="progress-arrow">←</span>
+                </React.Fragment>
+              )}
+              <span className="progress-current">{lastWeight.weight}</span>
+            </div>
+            {weightDelta !== null && weightDelta !== 0 && (
+              <div className="progress-delta">
+                {weightDelta < 0 ? `ירדת ${Math.abs(weightDelta).toFixed(1)} ק"ג` : `עלית ${weightDelta.toFixed(1)} ק"ג`}
+              </div>
+            )}
+            {goalProgressPct !== null && (
+              <React.Fragment>
+                <div className="progress-bar-track">
+                  <div className="progress-bar-fill" style={{ width: `${goalProgressPct}%` }} />
+                </div>
+                <div className="progress-bar-label">{goalProgressPct}% מהדרך ליעד ({goalWeight} ק"ג)</div>
+              </React.Fragment>
+            )}
+          </React.Fragment>
+        )}
       </div>
+
+      {todayNutrition && (todayNutrition.water || todayNutrition.protein) && (
+        <div className="today-snapshot">
+          {todayNutrition.water ? (
+            <div className="snapshot-item">
+              <span className="snapshot-icon">💧</span>
+              <span className="snapshot-value">{todayNutrition.water}<span className="snapshot-goal">/{WATER_GOAL_L} ל'</span></span>
+            </div>
+          ) : null}
+          {todayNutrition.protein ? (
+            <div className="snapshot-item">
+              <span className="snapshot-icon">🥩</span>
+              <span className="snapshot-value">{todayNutrition.protein}<span className="snapshot-goal">/{PROTEIN_GOAL_G} ג'</span></span>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       <div className="card">
         <h2>משקל <span className="muted">— 6 מדידות אחרונות</span></h2>
@@ -1336,6 +1411,10 @@ function SettingsTab({ data, updateData, showToast }) {
     updateData((d) => ({ ...d, settings: { ...d.settings, treatmentStartDate: e.target.value } }));
   }
 
+  function handleGoalWeightChange(e) {
+    updateData((d) => ({ ...d, settings: { ...d.settings, goalWeight: e.target.value } }));
+  }
+
   async function toggleReminders() {
     if (!data.settings.reminderEnabled) {
       if (typeof Notification !== "undefined") {
@@ -1426,6 +1505,17 @@ function SettingsTab({ data, updateData, showToast }) {
         </div>
         <div className="empty-state" style={{ padding: "8px 0 0", textAlign: "right" }}>
           תאריך ההתחלה משמש לחישוב הזריקה הבאה כל עוד לא נרשמה עדיין אף זריקה באפליקציה.
+        </div>
+      </div>
+
+      <div className="card">
+        <h2>יעד</h2>
+        <div className="field">
+          <label>משקל יעד (ק"ג) — לא חובה</label>
+          <input type="number" inputMode="decimal" step="0.1" placeholder="לדוגמה 70" value={data.settings.goalWeight || ""} onChange={handleGoalWeightChange} />
+        </div>
+        <div className="empty-state" style={{ padding: "8px 0 0", textAlign: "right" }}>
+          כשמוגדר יעד, הדשבורד יציג את אחוז ההתקדמות שלך אליו.
         </div>
       </div>
 
