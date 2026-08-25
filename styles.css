@@ -888,3 +888,75 @@ input, select, textarea {
   height: 34px;
   font-size: 0.9rem;
 }
+
+/* Access gate */
+#root {
+  display: none;
+}
+
+.gate-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(120deg, var(--navy-deep) 0%, var(--navy) 45%, var(--teal) 100%);
+  padding: 20px;
+  z-index: 100;
+}
+
+.gate-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+
+.gate-card h1 {
+  font-family: "Fraunces", serif;
+  color: var(--navy);
+  font-size: 1.3rem;
+  margin: 0 0 8px;
+}
+
+.gate-sub {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0 0 20px;
+}
+
+#gate-email,
+#gate-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+#gate-submit {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--teal);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+#gate-submit:disabled {
+  opacity: 0.6;
+}
+
+.gate-error {
+  color: var(--danger);
+  font-size: 0.85rem;
+  min-height: 1.2em;
+  margin: 12px 0 0;
+}
