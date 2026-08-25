@@ -472,6 +472,13 @@ input, select, textarea {
   font-size: 0.72rem;
   color: var(--ink-soft);
   padding: 6px 16px 18px;
+  line-height: 1.6;
+}
+
+.app-footer a {
+  color: var(--teal);
+  font-weight: 600;
+  text-decoration: none;
 }
 
 /* Dashboard greeting */
