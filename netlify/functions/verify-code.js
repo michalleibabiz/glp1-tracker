@@ -4,6 +4,16 @@ const { getStore } = require("@netlify/blobs");
 // computer + tablet, while blocking obvious reselling/forwarding of a code.
 const DEVICE_LIMIT = 3;
 
+// See admin-codes.js for why this manual-config fallback exists.
+function getCodesStore() {
+  const siteID = process.env.BLOBS_SITE_ID;
+  const token = process.env.BLOBS_TOKEN;
+  if (siteID && token) {
+    return getStore({ name: "access-codes", siteID, token });
+  }
+  return getStore("access-codes");
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return json(405, { valid: false });
@@ -19,7 +29,7 @@ exports.handler = async (event) => {
     return json(400, { valid: false });
   }
 
-  const store = getStore("access-codes");
+  const store = getCodesStore();
   const codes = (await store.get("codes", { type: "json" })) || {};
   const key = code.trim().toUpperCase();
   const entry = codes[key];

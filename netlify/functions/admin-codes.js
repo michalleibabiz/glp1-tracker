@@ -1,6 +1,20 @@
 const { getStore } = require("@netlify/blobs");
 const crypto = require("crypto");
 
+// Netlify normally auto-configures Blobs for functions with zero setup.
+// If that auto-detection ever fails ("MissingBlobsEnvironmentError"), set
+// BLOBS_SITE_ID and BLOBS_TOKEN env vars (site ID from Site configuration →
+// General; token from User settings → Applications → New access token) to
+// configure it manually instead.
+function getCodesStore() {
+  const siteID = process.env.BLOBS_SITE_ID;
+  const token = process.env.BLOBS_TOKEN;
+  if (siteID && token) {
+    return getStore({ name: "access-codes", siteID, token });
+  }
+  return getStore("access-codes");
+}
+
 exports.handler = async (event) => {
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (!adminPassword) {
@@ -12,7 +26,7 @@ exports.handler = async (event) => {
     return json(401, { error: "Unauthorized" });
   }
 
-  const store = getStore("access-codes");
+  const store = getCodesStore();
 
   if (event.httpMethod === "GET") {
     const codes = (await store.get("codes", { type: "json" })) || {};
