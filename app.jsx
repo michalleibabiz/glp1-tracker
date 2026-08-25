@@ -1667,7 +1667,13 @@ function App() {
 
       {screens[tab]}
 
-      <div className="app-footer">פותח ועוצב על ידי מיכל לייבה</div>
+      <div className="app-footer">
+        <div>
+          פותח ועוצב על ידי{" "}
+          <a href="https://www.michal-leiba.com" target="_blank" rel="noopener noreferrer">מיכל לייבה</a>
+        </div>
+        <div><a href="tel:0523833028">052-383-3028</a></div>
+      </div>
 
       <nav className="tab-bar">
         {TABS.map((t) => (
