@@ -1665,6 +1665,10 @@ function App() {
         <WaveDivider />
       </header>
 
+      {tab !== "dashboard" && (
+        <h1 className="page-title">{TABS.find((t) => t.key === tab)?.label}</h1>
+      )}
+
       {screens[tab]}
 
       <div className="app-footer">
