@@ -7,7 +7,7 @@
   <title>ניהול קודי גישה</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Noto+Sans+Hebrew:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=7" />
-  <link rel="stylesheet" href="admin.css?v=2" />
+  <link rel="stylesheet" href="admin.css?v=3" />
 </head>
 <body>
   <div id="admin-root">
@@ -23,13 +23,14 @@
       <form id="admin-add-form" class="admin-add-form">
         <input id="admin-name-input" type="text" placeholder="שם הקונה" required />
         <input id="admin-email-input" type="email" placeholder="אימייל" required />
+        <input id="admin-phone-input" type="tel" placeholder="טלפון" />
         <button type="submit">הוסף קונה חדש</button>
       </form>
       <p id="admin-new-code" class="admin-new-code"></p>
       <div class="admin-table-wrap">
         <table class="admin-table">
           <thead>
-            <tr><th>שם</th><th>אימייל</th><th>קוד</th><th>סטטוס</th><th>מכשירים</th><th></th></tr>
+            <tr><th>שם</th><th>אימייל</th><th>טלפון</th><th>קוד</th><th>תאריך הרשמה</th><th>סטטוס</th><th>מכשירים</th><th></th></tr>
           </thead>
           <tbody id="admin-table-body"></tbody>
         </table>

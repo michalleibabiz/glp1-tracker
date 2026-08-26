@@ -51,10 +51,11 @@ exports.handler = async (event) => {
     if (body.action === "add") {
       const name = (body.name || "").trim();
       const email = (body.email || "").trim().toLowerCase();
+      const phone = (body.phone || "").trim();
       if (!name) return json(400, { error: "Name required" });
       if (!email || !email.includes("@")) return json(400, { error: "Valid email required" });
       const newCode = generateCode();
-      codes[newCode] = { name, email, active: true, createdAt: new Date().toISOString() };
+      codes[newCode] = { name, email, phone, active: true, createdAt: new Date().toISOString() };
       await store.setJSON("codes", codes);
       return json(200, { code: newCode, email });
     }

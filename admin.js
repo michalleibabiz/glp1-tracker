@@ -8,6 +8,7 @@
   const addForm = document.getElementById("admin-add-form");
   const nameInput = document.getElementById("admin-name-input");
   const emailInput = document.getElementById("admin-email-input");
+  const phoneInput = document.getElementById("admin-phone-input");
   const newCodeEl = document.getElementById("admin-new-code");
   const tableBody = document.getElementById("admin-table-body");
 
@@ -33,6 +34,13 @@
     });
   }
 
+  function formatDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("he-IL", { day: "numeric", month: "numeric", year: "numeric" });
+  }
+
   async function loadCodes() {
     const data = await api("GET");
     tableBody.innerHTML = "";
@@ -41,7 +49,9 @@
       tr.innerHTML =
         "<td>" + escapeHtml(c.name || "") + "</td>" +
         "<td>" + escapeHtml(c.email || "") + "</td>" +
+        "<td>" + escapeHtml(c.phone || "") + "</td>" +
         "<td class=\"mono\">" + escapeHtml(c.code) + "</td>" +
+        "<td>" + formatDate(c.createdAt) + "</td>" +
         "<td>" + (c.active ? "פעיל" : "בוטל") + "</td>" +
         "<td>" + (c.deviceCount || 0) + " / 1</td>" +
         "<td></td>";
@@ -91,11 +101,13 @@
     e.preventDefault();
     const name = nameInput.value.trim();
     const email = emailInput.value.trim();
+    const phone = phoneInput.value.trim();
     if (!name || !email) return;
-    const data = await api("POST", { action: "add", name: name, email: email });
+    const data = await api("POST", { action: "add", name: name, email: email, phone: phone });
     newCodeEl.textContent = "קוד חדש עבור " + name + " (" + email + "): " + data.code;
     nameInput.value = "";
     emailInput.value = "";
+    phoneInput.value = "";
     loadCodes();
   });
 
