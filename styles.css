@@ -482,9 +482,9 @@ input, select, textarea {
 }
 
 .page-title {
-  font-family: "Fraunces", serif;
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-family: "Inter Tight", "Noto Sans Hebrew", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.7rem;
+  font-weight: 400;
   color: var(--navy);
   margin: 14px 16px 0;
 }
