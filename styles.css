@@ -66,7 +66,7 @@ input, select, textarea {
 
 .app-header h1 {
   margin: 0;
-  font-family: "Fraunces", "Noto Sans Hebrew", serif;
+  font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif;
   font-size: 1.35rem;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -155,7 +155,7 @@ input, select, textarea {
 
 .card h2 {
   margin: 0 0 14px;
-  font-family: "Fraunces", "Noto Sans Hebrew", serif;
+  font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif;
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--ink);
@@ -324,7 +324,7 @@ input, select, textarea {
 }
 
 .stat-card .value {
-  font-family: "Fraunces", serif;
+  font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif;
   font-size: 1.6rem;
   font-weight: 600;
   color: var(--navy);
@@ -363,7 +363,7 @@ input, select, textarea {
 .reminder-banner.due { background: linear-gradient(120deg, var(--teal), var(--cyan)); }
 .reminder-banner.overdue { background: linear-gradient(120deg, var(--danger), #8e2419); }
 
-.reminder-banner .big { font-family: "Fraunces", serif; font-size: 1.1rem; font-weight: 600; }
+.reminder-banner .big { font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif; font-size: 1.1rem; font-weight: 600; }
 .reminder-banner .small { font-size: 0.74rem; opacity: 0.9; margin-top: 3px; }
 
 /* List entries */
@@ -426,7 +426,7 @@ input, select, textarea {
   border-radius: var(--radius);
   padding: 16px 18px;
   margin: 8px 0 14px;
-  font-family: "Gveret Levin", "Fraunces", serif;
+  font-family: "Gveret Levin", "Inter Tight", "Noto Sans Hebrew", sans-serif;
   font-size: 1.25rem;
   font-weight: 400;
   color: #ffffff;
@@ -495,7 +495,7 @@ input, select, textarea {
 }
 
 .greeting-text {
-  font-family: "Fraunces", serif;
+  font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif;
   font-size: 1.85rem;
   font-weight: 700;
   color: var(--navy);
@@ -519,7 +519,7 @@ input, select, textarea {
 }
 
 .progress-first {
-  font-family: "Fraunces", serif;
+  font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif;
   font-size: 1.3rem;
   font-weight: 500;
   color: var(--ink-soft);
@@ -531,7 +531,7 @@ input, select, textarea {
 }
 
 .progress-current {
-  font-family: "Fraunces", serif;
+  font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif;
   font-size: 2.1rem;
   font-weight: 700;
   color: var(--navy);
@@ -924,7 +924,7 @@ input, select, textarea {
 }
 
 .gate-card h1 {
-  font-family: "Fraunces", serif;
+  font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif;
   color: var(--navy);
   font-size: 1.3rem;
   margin: 0 0 8px;

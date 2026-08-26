@@ -19,7 +19,7 @@ body {
 .admin-card h1 {
   margin-top: 0;
   color: var(--navy);
-  font-family: "Fraunces", serif;
+  font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif;
   font-size: 1.4rem;
 }
 
