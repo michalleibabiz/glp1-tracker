@@ -1,8 +1,8 @@
 const { getStore } = require("@netlify/blobs");
 
-// Max distinct devices allowed per code — covers one real person's phone +
-// computer + tablet, while blocking obvious reselling/forwarding of a code.
-const DEVICE_LIMIT = 3;
+// Max distinct devices allowed per code — locked to a single device so a
+// code can't be forwarded to someone else and used in parallel.
+const DEVICE_LIMIT = 1;
 
 // See admin-codes.js for why this manual-config fallback exists.
 function getCodesStore() {

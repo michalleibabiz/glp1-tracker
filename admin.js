@@ -43,7 +43,7 @@
         "<td>" + escapeHtml(c.email || "") + "</td>" +
         "<td class=\"mono\">" + escapeHtml(c.code) + "</td>" +
         "<td>" + (c.active ? "פעיל" : "בוטל") + "</td>" +
-        "<td>" + (c.deviceCount || 0) + " / 3</td>" +
+        "<td>" + (c.deviceCount || 0) + " / 1</td>" +
         "<td></td>";
       const actionsCell = tr.lastElementChild;
 
