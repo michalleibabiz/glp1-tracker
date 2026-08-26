@@ -14,7 +14,7 @@ const DEFAULT_DATA = {
   workouts: [],      // { id, date, type, duration, note }
   notes: [],         // legacy — kept only so old exported JSON still imports cleanly
   photos: [],        // { id, date (YYYY-MM), note } — actual image lives in IndexedDB, keyed by id
-  settings: { intervalDays: 7, reminderEnabled: false, medication: "", treatmentStartDate: "", goalWeight: "" },
+  settings: { intervalDays: 7, reminderEnabled: false, medication: "", treatmentStartDate: "", goalWeight: "", gender: "" },
 };
 
 function loadData() {
@@ -219,29 +219,30 @@ function joinYearMonth(year, monthIndex) {
 const INJECTION_SITES = ["בטן ימין", "בטן שמאל", "ירך ימין", "ירך שמאל", "זרוע ימין", "זרוע שמאל"];
 
 const MOTIVATIONAL_QUOTES = [
-  "כל צעד קטן הוא עדיין צעד קדימה.",
-  "את לא צריכה להיות מושלמת, רק עקבית.",
-  "היום זה עוד יום שבו את בוחרת בעצמך.",
-  "תני לעצמך קרדיט על כל מה שכבר עברת.",
-  "הגוף שלך מקשיב לך — תמשיכי לתת לו סבלנות.",
-  "התקדמות היא לא תמיד גלויה לעין, אבל היא קיימת.",
-  "כל יום שאת מתעדת הוא יום שבו את דואגת לעצמך.",
-  "את בונה הרגל, לא רודפת אחרי שלמות.",
-  "נשימה עמוקה, צעד אחד בכל פעם.",
-  "השינוי האמיתי קורה לאט ולאורך זמן — תני לו זמן.",
-  "היי סבלנית עם עצמך, את בתהליך של ריפוי.",
-  "כל תופעת לוואי שאת עוברת מלמדת אותך משהו על הגוף שלך.",
-  "הדרך שלך היא שלך בלבד — אין צורך להשוות.",
-  "מגיע לך להרגיש טוב יותר, ואת בדרך לשם.",
-  "תזכרי למה התחלת, וזה יזכיר לך למה להמשיך.",
+  { f: "כל צעד קטן הוא עדיין צעד קדימה.", m: "כל צעד קטן הוא עדיין צעד קדימה." },
+  { f: "את לא צריכה להיות מושלמת, רק עקבית.", m: "אתה לא צריך להיות מושלם, רק עקבי." },
+  { f: "היום זה עוד יום שבו את בוחרת בעצמך.", m: "היום זה עוד יום שבו אתה בוחר בעצמך." },
+  { f: "תני לעצמך קרדיט על כל מה שכבר עברת.", m: "תן לעצמך קרדיט על כל מה שכבר עברת." },
+  { f: "הגוף שלך מקשיב לך — תמשיכי לתת לו סבלנות.", m: "הגוף שלך מקשיב לך — תמשיך לתת לו סבלנות." },
+  { f: "התקדמות היא לא תמיד גלויה לעין, אבל היא קיימת.", m: "התקדמות היא לא תמיד גלויה לעין, אבל היא קיימת." },
+  { f: "כל יום שאת מתעדת הוא יום שבו את דואגת לעצמך.", m: "כל יום שאתה מתעד הוא יום שבו אתה דואג לעצמך." },
+  { f: "את בונה הרגל, לא רודפת אחרי שלמות.", m: "אתה בונה הרגל, לא רודף אחרי שלמות." },
+  { f: "נשימה עמוקה, צעד אחד בכל פעם.", m: "נשימה עמוקה, צעד אחד בכל פעם." },
+  { f: "השינוי האמיתי קורה לאט ולאורך זמן — תני לו זמן.", m: "השינוי האמיתי קורה לאט ולאורך זמן — תן לו זמן." },
+  { f: "היי סבלנית עם עצמך, את בתהליך של ריפוי.", m: "היה סבלני עם עצמך, אתה בתהליך של ריפוי." },
+  { f: "כל תופעת לוואי שאת עוברת מלמדת אותך משהו על הגוף שלך.", m: "כל תופעת לוואי שאתה עובר מלמדת אותך משהו על הגוף שלך." },
+  { f: "הדרך שלך היא שלך בלבד — אין צורך להשוות.", m: "הדרך שלך היא שלך בלבד — אין צורך להשוות." },
+  { f: "מגיע לך להרגיש טוב יותר, ואת בדרך לשם.", m: "מגיע לך להרגיש טוב יותר, ואתה בדרך לשם." },
+  { f: "תזכרי למה התחלת, וזה יזכיר לך למה להמשיך.", m: "תזכור למה התחלת, וזה יזכיר לך למה להמשיך." },
 ];
 
-function getDailyQuote() {
+function getDailyQuote(gender) {
   const start = new Date(new Date().getFullYear(), 0, 0);
   const now = new Date();
   const diff = now - start;
   const dayOfYear = Math.floor(diff / 86400000);
-  return MOTIVATIONAL_QUOTES[dayOfYear % MOTIVATIONAL_QUOTES.length];
+  const pair = MOTIVATIONAL_QUOTES[dayOfYear % MOTIVATIONAL_QUOTES.length];
+  return gender === "male" ? pair.m : pair.f;
 }
 
 const NONE_SYMPTOM = "אין";
@@ -400,8 +401,8 @@ function LineChart({ points, unit, from = "#2eb5d6", to = "#16336e", height = 16
 /* Dashboard                                                               */
 /* ---------------------------------------------------------------------- */
 
-function QuoteBanner() {
-  const quote = useMemo(getDailyQuote, []);
+function QuoteBanner({ gender }) {
+  const quote = useMemo(() => getDailyQuote(gender), [gender]);
   return (
     <div className="quote-banner">
       <span className="quote-mark">”</span>
@@ -411,6 +412,7 @@ function QuoteBanner() {
 }
 
 function Dashboard({ data, showToast, onNavigate }) {
+  const isMale = data.settings.gender === "male";
   const lastInjection = data.injections[data.injections.length - 1];
   const intervalDays = data.settings.intervalDays;
   const today = todayISO();
@@ -428,7 +430,9 @@ function Dashboard({ data, showToast, onNavigate }) {
 
   let bannerClass = "ok";
   let bannerBig = "אין עדיין זריקות רשומות";
-  let bannerSmall = "עברי ללשונית זריקות כדי להוסיף רישום ראשון, או הגדירי תאריך תחילת טיפול בהגדרות";
+  let bannerSmall = isMale
+    ? "עבור ללשונית זריקות כדי להוסיף רישום ראשון, או הגדר תאריך תחילת טיפול בהגדרות"
+    : "עברי ללשונית זריקות כדי להוסיף רישום ראשון, או הגדירי תאריך תחילת טיפול בהגדרות";
 
   if (anchorDate) {
     const dueNote = fromStartDateOnly ? " · לפי תאריך תחילת הטיפול" : "";
@@ -472,7 +476,7 @@ function Dashboard({ data, showToast, onNavigate }) {
 
   const greeting = getGreeting();
   const daysSinceLastInjection = lastInjection ? daysBetween(lastInjection.date, today) : null;
-  let dayCounterText = "בואי נתחיל לתעד את המסע שלך";
+  let dayCounterText = isMale ? "בוא נתחיל לתעד את המסע שלך" : "בואי נתחיל לתעד את המסע שלך";
   if (daysSinceLastInjection === 0) {
     dayCounterText = "היום הזרקת! 💉";
   } else if (daysSinceLastInjection !== null) {
@@ -488,7 +492,7 @@ function Dashboard({ data, showToast, onNavigate }) {
         <p className="greeting-sub">{dayCounterText}</p>
       </div>
 
-      <QuoteBanner />
+      <QuoteBanner gender={data.settings.gender} />
 
       {!hasPhotoThisMonth && (
         <div className="photo-nudge" onClick={() => onNavigate && onNavigate("photos")}>
@@ -892,12 +896,12 @@ function PhotosTab({ data, updateData, showToast }) {
       <div className="card">
         <h2>לפני / אחרי</h2>
         {sortedAsc.length === 0 ? (
-          <EmptyState text="עדיין אין תמונות — התחילי עם התמונה הראשונה למטה" />
+          <EmptyState text={data.settings.gender === "male" ? "עדיין אין תמונות — התחל עם התמונה הראשונה למטה" : "עדיין אין תמונות — התחילי עם התמונה הראשונה למטה"} />
         ) : sortedAsc.length === 1 ? (
           <div className="before-after-single">
             <PhotoImage id={firstPhoto.id} alt={formatMonthHe(firstPhoto.date)} className="before-after-img" />
             <div className="label">{formatMonthHe(firstPhoto.date)}</div>
-            <div className="empty-state">הוסיפי עוד תמונה חודשית כדי לראות השוואה</div>
+            <div className="empty-state">{data.settings.gender === "male" ? "הוסף עוד תמונה חודשית כדי לראות השוואה" : "הוסיפי עוד תמונה חודשית כדי לראות השוואה"}</div>
           </div>
         ) : (
           <React.Fragment>
@@ -971,7 +975,7 @@ function PhotosTab({ data, updateData, showToast }) {
         )}
         <div className="field">
           <label>הערה (לא חובה)</label>
-          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="איך את מרגישה החודש..." />
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={data.settings.gender === "male" ? "איך אתה מרגיש החודש..." : "איך את מרגישה החודש..."} />
         </div>
         <button className="btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? "שומר..." : "שמירת תמונה"}
@@ -1453,6 +1457,10 @@ function SettingsTab({ data, updateData, showToast }) {
     updateData((d) => ({ ...d, settings: { ...d.settings, goalWeight: e.target.value } }));
   }
 
+  function selectGender(g) {
+    updateData((d) => ({ ...d, settings: { ...d.settings, gender: g } }));
+  }
+
   async function toggleReminders() {
     if (!data.settings.reminderEnabled) {
       if (typeof Notification !== "undefined") {
@@ -1512,6 +1520,24 @@ function SettingsTab({ data, updateData, showToast }) {
       <div className="privacy-note">
         <span>🔒</span>
         <span>כל הנתונים שלך נשמרים אך ורק על המכשיר הזה (localStorage). שום מידע לא נשלח לשרת חיצוני.</span>
+      </div>
+
+      <div className="card">
+        <h2>פנייה אישית</h2>
+        <div className="field">
+          <label>איך לפנות אליך</label>
+          <div className="chip-row">
+            <button className={`chip ${data.settings.gender === "female" ? "selected" : ""}`} onClick={() => selectGender("female")}>
+              אישה
+            </button>
+            <button className={`chip ${data.settings.gender === "male" ? "selected" : ""}`} onClick={() => selectGender("male")}>
+              גבר
+            </button>
+          </div>
+        </div>
+        <div className="empty-state" style={{ padding: "8px 0 0", textAlign: "right" }}>
+          קובע את לשון הפנייה במשפטי ההשראה היומיים.
+        </div>
       </div>
 
       <div className="card">
