@@ -2,6 +2,7 @@
   const CODE_KEY = "glp1_access_code";
   const EMAIL_KEY = "glp1_access_email";
   const DEVICE_KEY = "glp1_device_id";
+  const NAME_KEY = "glp1_access_name";
   const gate = document.getElementById("gate");
   const rootEl = document.getElementById("root");
   const form = document.getElementById("gate-form");
@@ -77,10 +78,12 @@
     verify(storedCode, storedEmail).then((result) => {
       setFormDisabled(false);
       if (result.valid) {
+        if (result.name) localStorage.setItem(NAME_KEY, result.name);
         showApp();
       } else {
         localStorage.removeItem(CODE_KEY);
         localStorage.removeItem(EMAIL_KEY);
+        localStorage.removeItem(NAME_KEY);
         showGate(messageFor(result));
       }
     });
@@ -100,6 +103,7 @@
     if (result.valid) {
       localStorage.setItem(CODE_KEY, code);
       localStorage.setItem(EMAIL_KEY, email);
+      if (result.name) localStorage.setItem(NAME_KEY, result.name);
       showApp();
     } else {
       errorEl.textContent = messageFor(result);

@@ -249,9 +249,19 @@ const NONE_SYMPTOM = "אין";
 
 const MEDICATION_OPTIONS = ["מונג'רו", "וויגובי", "אוזמפיק", "סקסנדה"];
 
-const USER_NAME = "מיכל";
 const WATER_GOAL_L = 2;
 const PROTEIN_GOAL_G = 100;
+
+// Set by gate.js after verifying an access code (from the name the admin
+// entered when creating that code). Falls back to "מיכל" only when the
+// gate is bypassed locally (localhost), where nothing sets this.
+function getUserName() {
+  try {
+    return localStorage.getItem("glp1_access_name") || "מיכל";
+  } catch (e) {
+    return "מיכל";
+  }
+}
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -475,6 +485,7 @@ function Dashboard({ data, showToast, onNavigate }) {
   const hasPhotoThisMonth = data.photos.some((p) => p.date === currentYearMonth());
 
   const greeting = getGreeting();
+  const userName = getUserName();
   const daysSinceLastInjection = lastInjection ? daysBetween(lastInjection.date, today) : null;
   let dayCounterText = isMale ? "בוא נתחיל לתעד את המסע שלך" : "בואי נתחיל לתעד את המסע שלך";
   if (daysSinceLastInjection === 0) {
@@ -488,7 +499,7 @@ function Dashboard({ data, showToast, onNavigate }) {
   return (
     <div className="screen">
       <div className="greeting-block">
-        <h2 className="greeting-text">{greeting.text}, {USER_NAME} {greeting.icon}</h2>
+        <h2 className="greeting-text">{greeting.text}, {userName} {greeting.icon}</h2>
         <p className="greeting-sub">{dayCounterText}</p>
       </div>
 

@@ -43,7 +43,7 @@ exports.handler = async (event) => {
 
   // No device id (older client) — allow through without device tracking.
   if (!deviceId || typeof deviceId !== "string") {
-    return json(200, { valid: true });
+    return json(200, { valid: true, name: entry.name || "" });
   }
 
   const devices = entry.devices || [];
@@ -57,7 +57,7 @@ exports.handler = async (event) => {
     await store.setJSON("codes", codes);
   }
 
-  return json(200, { valid: true });
+  return json(200, { valid: true, name: entry.name || "" });
 };
 
 function json(statusCode, obj) {
