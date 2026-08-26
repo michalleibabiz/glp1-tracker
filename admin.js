@@ -41,11 +41,52 @@
     return d.toLocaleDateString("he-IL", { day: "numeric", month: "numeric", year: "numeric" });
   }
 
+  let editingCode = null;
+
   async function loadCodes() {
     const data = await api("GET");
     tableBody.innerHTML = "";
     data.codes.forEach(function (c) {
       const tr = document.createElement("tr");
+
+      if (editingCode === c.code) {
+        tr.innerHTML =
+          "<td><input class=\"edit-input edit-name\" value=\"" + escapeHtml(c.name || "") + "\"></td>" +
+          "<td><input class=\"edit-input edit-email\" type=\"email\" value=\"" + escapeHtml(c.email || "") + "\"></td>" +
+          "<td><input class=\"edit-input edit-phone\" type=\"tel\" value=\"" + escapeHtml(c.phone || "") + "\"></td>" +
+          "<td class=\"mono\">" + escapeHtml(c.code) + "</td>" +
+          "<td>" + formatDate(c.createdAt) + "</td>" +
+          "<td>" + (c.active ? "פעיל" : "בוטל") + "</td>" +
+          "<td>" + (c.deviceCount || 0) + " / 1</td>" +
+          "<td></td>";
+        const actionsCell = tr.lastElementChild;
+
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "שמור";
+        saveBtn.addEventListener("click", async function () {
+          const name = tr.querySelector(".edit-name").value.trim();
+          const email = tr.querySelector(".edit-email").value.trim();
+          const phone = tr.querySelector(".edit-phone").value.trim();
+          if (!name || !email) return;
+          await api("POST", { action: "update", code: c.code, name: name, email: email, phone: phone });
+          editingCode = null;
+          loadCodes();
+        });
+        actionsCell.appendChild(saveBtn);
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "ביטול";
+        cancelBtn.className = "secondary";
+        cancelBtn.addEventListener("click", function () {
+          editingCode = null;
+          loadCodes();
+        });
+        actionsCell.appendChild(cancelBtn);
+
+        tableBody.appendChild(tr);
+        return;
+      }
+
       tr.innerHTML =
         "<td>" + escapeHtml(c.name || "") + "</td>" +
         "<td>" + escapeHtml(c.email || "") + "</td>" +
@@ -56,6 +97,15 @@
         "<td>" + (c.deviceCount || 0) + " / 1</td>" +
         "<td></td>";
       const actionsCell = tr.lastElementChild;
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "ערוך";
+      editBtn.className = "secondary";
+      editBtn.addEventListener("click", function () {
+        editingCode = c.code;
+        loadCodes();
+      });
+      actionsCell.appendChild(editBtn);
 
       const toggleBtn = document.createElement("button");
       toggleBtn.textContent = c.active ? "בטל" : "הפעל מחדש";

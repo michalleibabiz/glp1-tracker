@@ -60,6 +60,21 @@ exports.handler = async (event) => {
       return json(200, { code: newCode, email });
     }
 
+    if (body.action === "update") {
+      const code = (body.code || "").trim().toUpperCase();
+      if (!codes[code]) return json(404, { error: "Code not found" });
+      const name = (body.name || "").trim();
+      const email = (body.email || "").trim().toLowerCase();
+      const phone = (body.phone || "").trim();
+      if (!name) return json(400, { error: "Name required" });
+      if (!email || !email.includes("@")) return json(400, { error: "Valid email required" });
+      codes[code].name = name;
+      codes[code].email = email;
+      codes[code].phone = phone;
+      await store.setJSON("codes", codes);
+      return json(200, { code });
+    }
+
     if (body.action === "toggle") {
       const code = (body.code || "").trim().toUpperCase();
       if (!codes[code]) return json(404, { error: "Code not found" });

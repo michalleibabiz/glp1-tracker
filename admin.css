@@ -3,7 +3,7 @@ body {
 }
 
 #admin-root {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 48px auto;
   padding: 0 16px;
 }
@@ -101,6 +101,15 @@ body {
 .admin-table .mono {
   font-family: monospace;
   letter-spacing: 1px;
+}
+
+.admin-table .edit-input {
+  width: 100%;
+  min-width: 110px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.9rem;
 }
 
 .admin-table button {
