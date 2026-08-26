@@ -496,11 +496,14 @@ input, select, textarea {
 
 .greeting-text {
   font-family: "Inter Tight", "Noto Sans Hebrew", sans-serif;
-  font-size: 1.85rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--navy);
   margin: 0;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .greeting-sub {
