@@ -1316,12 +1316,15 @@ function WorkoutsTab({ data, updateData, showToast }) {
 
   const sorted = [...data.workouts].sort((a, b) => b.date.localeCompare(a.date));
 
-  const totalMinutesThisWeek = useMemo(() => {
+  const workoutsThisWeek = useMemo(() => {
     const weekAgo = addDaysISO(todayISO(), -6);
-    return data.workouts
-      .filter((w) => w.date >= weekAgo && w.date <= todayISO())
-      .reduce((sum, w) => sum + (w.duration || 0), 0);
+    return data.workouts.filter((w) => w.date >= weekAgo && w.date <= todayISO());
   }, [data.workouts]);
+
+  const totalMinutesThisWeek = useMemo(
+    () => workoutsThisWeek.reduce((sum, w) => sum + (w.duration || 0), 0),
+    [workoutsThisWeek]
+  );
 
   function handleAdd() {
     const finalType = type === "אחר" ? customType.trim() : type;
@@ -1347,8 +1350,8 @@ function WorkoutsTab({ data, updateData, showToast }) {
           <div className="label">דקות אימון (7 ימים)</div>
         </div>
         <div className="stat-card">
-          <div className="value">{data.workouts.length}</div>
-          <div className="label">סה"כ אימונים</div>
+          <div className="value">{workoutsThisWeek.length}</div>
+          <div className="label">אימונים (7 ימים)</div>
         </div>
       </div>
 
